@@ -5,6 +5,15 @@
 //I2C address bit 0:        GND:0, VDDIO:1
 #define BME280Address 0x76
 
+//DIG_T1: unsigned short
+//DIG_T2/3: signed short
+#define DIG_T1_LO_REGISTER_ADDRESS 0x88
+#define DIG_T1_HI_REGISTER_ADDRESS 0x89
+#define DIG_T2_LO_REGISTER_ADDRESS 0x8A
+#define DIG_T2_HI_REGISTER_ADDRESS 0x8B
+#define DIG_T3_LO_REGISTER_ADDRESS 0x8C
+#define DIG_T3_HI_REGISTER_ADDRESS 0x8D
+
 
 #define DIG_H1_REGISTER_ADDRESS 0xA1
 #define DIG_H2_LO_REGISTER_ADDRESS 0xE1
@@ -18,6 +27,16 @@
 int analogPin[6]; 
 float voltageAtAdcPin;  
 int i;
+
+/*
+DIG_T1: unsigned short
+DIG_T2/3: signed short
+*/
+
+unsigned short dig_T1;
+signed short dig_T2,dig_T3;
+
+
 // humidity compensation data
 unsigned char dig_H1,dig_H3;
 signed short dig_H2,dig_H4,dig_H5;
@@ -67,7 +86,7 @@ int ReadBME280HumidityData()
   return reading;
 }
 
-int16_t ReadHumidityCompRegister(byte registerAddress)
+int16_t ReadCompRegister(byte registerAddress)
 {
   int16_t data=0;
   Wire.beginTransmission(BME280Address); // transmit to device    
@@ -88,33 +107,51 @@ void ReadAllHumidityCompRegister()
 
 {
   int16_t dataHi,dataLo;
-  dig_H1=ReadHumidityCompRegister(DIG_H1_REGISTER_ADDRESS);
+  dig_H1=ReadCompRegister(DIG_H1_REGISTER_ADDRESS);
   // register address 0xE1/0xE2, data dig_H2[7:0]/[15:8]
-  dataLo=ReadHumidityCompRegister(DIG_H2_LO_REGISTER_ADDRESS);
-  dataHi=ReadHumidityCompRegister(DIG_H2_HI_REGISTER_ADDRESS);
+  dataLo=ReadCompRegister(DIG_H2_LO_REGISTER_ADDRESS);
+  dataHi=ReadCompRegister(DIG_H2_HI_REGISTER_ADDRESS);
   dig_H2=(dataHi)<<8 & (dataLo);
 
+  dig_H3=ReadCompRegister(DIG_H3_REGISTER_ADDRESS);
 
-  dig_H3=ReadHumidityCompRegister(DIG_H3_REGISTER_ADDRESS);
-
-  dataHi=ReadHumidityCompRegister(DIG_H4_HI_REGISTER_ADDRESS);
-  dataLo=ReadHumidityCompRegister(DIG_H4_H5_REGISTER_ADDRESS);
+  dataHi=ReadCompRegister(DIG_H4_HI_REGISTER_ADDRESS);
+  dataLo=ReadCompRegister(DIG_H4_H5_REGISTER_ADDRESS);
   dig_H4=(dataHi<<4)|(dataLo & 0x000F);// dig_H4[11:4]/[3:0]
 
-  dataHi=ReadHumidityCompRegister(DIG_H5_HI_REGISTER_ADDRESS);// dig_H5[11:4]
+  dataHi=ReadCompRegister(DIG_H5_HI_REGISTER_ADDRESS);// dig_H5[11:4]
   dig_H5=(dataHi<<4)|((dataLo & 0x00F0)>>4); // // dig_H5[11:4]/[3:0]   0xE6,0xE5[7:4]
 
 }
 
-void setup() {
-  Serial.begin(115200);           //  setup serial
 
+void ReadAllTempCompRegister()
+{
+  int16_t dataHi,dataLo;
+  dataLo=ReadCompRegister(DIG_T1_LO_REGISTER_ADDRESS);
+  dataHi=ReadCompRegister(DIG_T1_HI_REGISTER_ADDRESS);
+  dig_T1=(dataHi<<8)|dataLo;
+
+  // register address 0xE1/0xE2, data dig_H2[7:0]/[15:8]
+  dataLo=ReadCompRegister(DIG_T2_LO_REGISTER_ADDRESS);
+  dataHi=ReadCompRegister(DIG_T2_HI_REGISTER_ADDRESS);
+  dig_T3=(dataHi<<8)|dataLo;
+
+  dataLo=ReadCompRegister(DIG_T3_LO_REGISTER_ADDRESS);
+  dataHi=ReadCompRegister(DIG_T3_HI_REGISTER_ADDRESS);
+  dig_T3=(dataHi<<8)|dataLo;
+}
+
+
+void setup() 
+{
+  Serial.begin(115200);           //  setup serial
   ConfigAnalogPins();
 }
 
 
 void loop() {
-
+  // send the Gas Sensor ADC value to the SerialPort
   for(i=0;i<6;i++)
   {
     voltageAtAdcPin = (float) analogRead(analogPin[i])/1024*5;  // read the input pin
@@ -125,6 +162,55 @@ void loop() {
     Serial.print("\r\n");
     delay(100);
   }
+
+// use serial port console to see what is printed 
+  Serial.print("T1");
+  Serial.print(dig_T1,BIN);
+  Serial.print("\r\n");
+  delay(100);
+
+  Serial.print("H2");
+  Serial.print(dig_T2,BIN);
+  Serial.print("\r\n");
+  delay(100);
+
+  Serial.print("H3");
+  Serial.print(dig_T3,BIN);
+  Serial.print("\r\n");
+  delay(100);
+  // Send the Humidity Data and its compensation the the SerialPort
+  // Compensation algorithm, Page 26: 
+  // https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf
+  // unsigned char dig_H1,dig_H3;
+  // signed short dig_H2,dig_H4,dig_H5;
+
+
+
+
+  Serial.print("H1");
+  Serial.print(dig_H1,BIN);
+  Serial.print("\r\n");
+  delay(100);
+
+  Serial.print("H2");
+  Serial.print(dig_H2,BIN);
+  Serial.print("\r\n");
+  delay(100);
+
+  Serial.print("H3");
+  Serial.print(dig_H3,BIN);
+  Serial.print("\r\n");
+  delay(100);
+
+  Serial.print("H4");
+  Serial.print(dig_H4,BIN);
+  Serial.print("\r\n");
+  delay(100);
+
+  Serial.print("H5");
+  Serial.print(dig_H5,BIN);
+  Serial.print("\r\n");
+  delay(100);
 
 }
 
