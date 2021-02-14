@@ -165,17 +165,17 @@ void loop() {
 
 // use serial port console to see what is printed 
   Serial.print("T1");
-  Serial.print(dig_T1,BIN);
+  Serial.print(dig_T1,DEC);
   Serial.print("\r\n");
   delay(100);
 
   Serial.print("H2");
-  Serial.print(dig_T2,BIN);
+  Serial.print(dig_T2,DEC);
   Serial.print("\r\n");
   delay(100);
 
   Serial.print("H3");
-  Serial.print(dig_T3,BIN);
+  Serial.print(dig_T3,DEC);
   Serial.print("\r\n");
   delay(100);
   // Send the Humidity Data and its compensation the the SerialPort
@@ -188,27 +188,27 @@ void loop() {
 
 
   Serial.print("H1");
-  Serial.print(dig_H1,BIN);
+  Serial.print(dig_H1,DEC);
   Serial.print("\r\n");
   delay(100);
 
   Serial.print("H2");
-  Serial.print(dig_H2,BIN);
+  Serial.print(dig_H2,DEC);
   Serial.print("\r\n");
   delay(100);
 
   Serial.print("H3");
-  Serial.print(dig_H3,BIN);
+  Serial.print(dig_H3,DEC);
   Serial.print("\r\n");
   delay(100);
 
   Serial.print("H4");
-  Serial.print(dig_H4,BIN);
+  Serial.print(dig_H4,DEC);
   Serial.print("\r\n");
   delay(100);
 
   Serial.print("H5");
-  Serial.print(dig_H5,BIN);
+  Serial.print(dig_H5,DEC);
   Serial.print("\r\n");
   delay(100);
 
